@@ -35,7 +35,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
 
         function parseComic(comic) {
             return {
-                id: comic.id,
+                id: comic.id.toString(),
                 title: comic.name,
                 subTitle: comic.authors,
                 cover: comic.cover,
