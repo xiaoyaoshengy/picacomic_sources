@@ -10,7 +10,7 @@ class MyBaozi extends ComicSource {
     minAppVersion = "4.0.0"
 
     // 更新链接
-    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/refs/heads/master/mybaozi.js"
+    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/mybaozi.js"
 
     /// APP启动时或者添加/更新漫画源时执行此函数
     init() {
