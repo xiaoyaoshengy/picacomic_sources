@@ -14,7 +14,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
 
     async queryJson(query) {
         let res = await Network.get(
-            `https://www.idmzj.com/api/v1/comic1/filter?${query}`
+            `https://www.idmzj.com/api/v1/comic1/${query}`
         )
 
         if (res.status !== 200) {
@@ -44,9 +44,12 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
             }
         }
 
+        let totalNum = json.data["totalNum"]
+        let comicList = totalNum ? json.data["comicList"] : []
+
         return {
-            comics: json.data["comicList"].map(parseComic),
-            maxPage: Math.ceil(json.data["totalNum"] / 18),
+            comics: comicList.map(parseComic),
+            maxPage: Math.ceil(totalNum / 18),
         }
     }
 
@@ -68,7 +71,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
             load: async (page) => {
                 let timestamp = new Date().getTime()
                 return await this.queryComics(
-                    `channel=pc&app_name=dmzj&version=1.0.0&timestamp=${timestamp}&uid&sortType=0&page=${page}&size=18&status=0&audience=0&theme=0&cate=0&firstLetter`
+                    `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${timestamp}&uid&sortType=0&page=${page}&size=18&status=0&audience=0&theme=0&cate=0&firstLetter`
                 )
             }
         }
@@ -78,10 +81,10 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     /// 一个漫画源只能有一个分类页面, 也可以没有, 设置为null禁用分类页面
     category = {
         /// 标题, 同时为标识符, 不能与其他漫画源的分类页面重复
-        title: "",
+        title: "动漫之家",
         parts: [
             {
-                name: "主题",
+                name: "题材",
 
                 // fixed 或者 random
                 // random用于分类数量相当多时, 随机显示其中一部分
@@ -90,7 +93,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
                 // 如果类型为random, 需要提供此字段, 表示同时显示的数量
                 // randomNumber: 5,
 
-                categories: ["全部", "冒险", "奇幻", "百合", "校园"],
+                categories: ["全部", "冒险", "搞笑", "格斗", "科幻", "爱情", "侦探", "竞技", "魔法", "校园", "百合", "耽美", "历史", "战争", "宅系", "治愈", "仙侠", "武侠", "职场", "神鬼", "奇幻", "生活", "其他"],
 
                 // category或者search
                 // 如果为category, 点击后将进入分类漫画页面, 使用下方的`categoryComics`加载漫画
@@ -98,7 +101,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
                 itemType: "category",
 
                 // 若提供, 数量需要和`categories`一致, `categoryComics.load`方法将会收到此参数
-                categoryParams: ["", "maoxian", "qihuan", "baihe", "xiaoyuan"]
+                categoryParams: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"]
             }
         ],
         enableRankingPage: false,
@@ -107,58 +110,52 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     /// 分类漫画页面, 即点击分类标签后进入的页面
     categoryComics = {
         load: async (category, param, options, page) => {
-            /*
-            加载漫画
-            category和param参数来自分类页面, options类型为[]string, 来自下方optionList, 顺序保持一致
-            ```
-            let data = JSON.parse((await Network.get('...')).body)
-            let maxPage = data.maxPage
-
-            function parseComic(comic) {
-                // ...
-
-                return {
-                    id: id,
-                    title: title,
-                    subTitle: author,
-                    cover: cover,
-                    tags: tags,
-                    description: description
-                }
-            }
-
-            return {
-                comics: data.list.map(parseComic),
-                maxPage: maxPage
-            }
-            ```
-            */
+            let timestamp = new Date().getTime()
+            return await this.queryComics(
+                `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${timestamp}&uid&sortType=${options[0]}&page=${page}&size=18&status=${options[1]}&audience=${options[2]}&theme=${param}&cate=${options[3]}&firstLetter${options[4]}`
+            )
         },
         // 提供选项
         optionList: [
             {
+                options: [
+                    "0-更新时间",
+                    "1-热门人气"
+                ],
+            },
+            {
                 // 对于单个选项, 使用-分割, 左侧为用于数据加载的值, 即传给load函数的options参数; 右侧为显示给用户的文本
                 options: [
-                    "*datetime_updated-时间倒序",
-                    "datetime_updated-时间正序",
-                    "*popular-热度倒序",
-                    "popular-热度正序",
+                    "0-全部",
+                    "1-连载",
+                    "2-完结",
                 ],
                 // 提供[]string, 当分类名称位于此数组中时, 禁用此选项
                 notShowWhen: null,
                 // 提供[]string, 当分类名称没有位于此数组中时, 禁用此选项
                 showWhen: null
+            },
+            {
+                options: [
+                    "0-全部",
+                    "3262-少年",
+                    "3263-少女",
+                    "3264-青年",
+                ],
+            },
+            {
+                options: [
+                    "0-全部",
+                    "1-故事漫画",
+                    "2-四格多格",
+                ],
+            },
+            {
+                options: [
+                    "-全部", "=a-A", "=b-B", "=c-C", "=d-D", "=e-E", "=f-F", "=g-G", "=h-H", "=i-I", "=j-J", "=k-K", "=l-L", "=m-M", "=n-N", "=o-O", "=p-P", "=q-Q", "=r-R", "=s-S", "=t-T", "=u-U", "=v-V", "=w-W", "=x-X", "=y-Y", "=z-Z", "=9-0~9",
+                ],
             }
         ],
-        ranking: {
-            options: [
-                "day-日",
-                "week-周"
-            ],
-            load: async (option, page) => {
-                
-            }
-        }
     }
 
     /// 搜索
