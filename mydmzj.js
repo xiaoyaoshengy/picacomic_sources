@@ -12,6 +12,10 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     // 更新链接
     url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/mydmzj.js"
 
+    get timestamp() {
+        return new Date().getTime()
+    }
+
     async queryJson(query) {
         let res = await Network.get(
             `https://www.idmzj.com/api/v1/comic1/${query}`
@@ -30,26 +34,29 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
         return json
     }
 
-    async queryComics(query) {
+    async queryComics(query, totalName, comicListName, pageSize) {
         let json = await this.queryJson(query)
 
         function parseComic(comic) {
+            let types = comic.types ? comic.types : ""
+            types = types.split("/")
+
             return {
-                id: comic.id.toString(),
+                id: comic.comic_py,
                 title: comic.name,
                 subTitle: comic.authors,
                 cover: comic.cover,
-                tags: comic.types.split("/"),
+                tags: types,
                 description: comic.status,
             }
         }
 
-        let totalNum = json.data["totalNum"]
-        let comicList = totalNum ? json.data["comicList"] : []
+        let totalNum = json.data[totalName]
+        let comicList = totalNum ? json.data[comicListName] : []
 
         return {
             comics: comicList.map(parseComic),
-            maxPage: Math.ceil(totalNum / 18),
+            maxPage: Math.ceil(totalNum / pageSize),
         }
     }
 
@@ -69,9 +76,11 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
             type: "multiPageComicList",
 
             load: async (page) => {
-                let timestamp = new Date().getTime()
                 return await this.queryComics(
-                    `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${timestamp}&uid&sortType=0&page=${page}&size=18&status=0&audience=0&theme=0&cate=0&firstLetter`
+                    `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&sortType=0&page=${page}&size=18&status=0&audience=0&theme=0&cate=0&firstLetter`,
+                    "totalNum",
+                    "comicList",
+                    18
                 )
             }
         }
@@ -110,9 +119,11 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     /// 分类漫画页面, 即点击分类标签后进入的页面
     categoryComics = {
         load: async (category, param, options, page) => {
-            let timestamp = new Date().getTime()
             return await this.queryComics(
-                `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${timestamp}&uid&sortType=${options[0]}&page=${page}&size=18&status=${options[1]}&audience=${options[2]}&theme=${param}&cate=${options[3]}&firstLetter${options[4]}`
+                `filter?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&sortType=${options[0]}&page=${page}&size=18&status=${options[1]}&audience=${options[2]}&theme=${param}&cate=${options[3]}&firstLetter${options[4]}`,
+                "totalNum",
+                "comicList",
+                18
             )
         },
         // 提供选项
@@ -161,152 +172,62 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     /// 搜索
     search = {
         load: async (keyword, options, page) => {
-            /*
-            加载漫画
-            options类型为[]string, 来自下方optionList, 顺序保持一致
-            ```
-            let data = JSON.parse((await Network.get('...')).body)
-            let maxPage = data.maxPage
-
-            function parseComic(comic) {
-                // ...
-
-                return {
-                    id: id,
-                    title: title,
-                    subTitle: author,
-                    cover: cover,
-                    tags: tags,
-                    description: description
-                }
-            }
-
-            return {
-                comics: data.list.map(parseComic),
-                maxPage: maxPage
-            }
-            ```
-            */
+            return this.queryComics(
+                `search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=20`,
+                "total",
+                "comic_list",
+                20
+            )
         },
 
         // 提供选项
-        optionList: [
-            {
-                // 使用-分割, 左侧用于数据加载, 右侧显示给用户
-                options: [
-                    "0-time",
-                    "1-popular"
-                ],
-                // 标签
-                label: "sort"
-            }
-        ]
+        optionList: []
     }
 
     /// 收藏
-    favorites = {
-        /// 是否为多收藏夹
-        multiFolder: false,
-        /// 添加或者删除收藏
-        addOrDelFavorite: async (comicId, folderId, isAdding) => {
-            /*
-            返回任意值表示成功
-            抛出错误`Login expired`表示登录到期, App将会自动重新登录并且重新加载
-            ```
-            if (res.status === 401) {
-                throw `Login expired`;
-            }
-            ```
-            不需要考虑未登录的情况, 未登录时不会调用此函数
-            */
-        },
-        // 加载收藏夹, 仅当multiFolder为true时有效
-        // 当comicId不为null时, 需要同时返回包含该漫画的收藏夹
-        loadFolders: async (comicId) => {
-            /*
-            ```
-            let data = JSON.parse((await Network.get('...')).body)
-
-            let folders = {}
-
-            data.folders.forEach((f) => {
-                folders[f.id] = f.name
-            })
-
-            return {
-                // map<string, string> key为收藏夹id, value为收藏夹名称, id用于收藏夹相关内容的加载
-                folders: folders,
-                // string[]?, 包含comicId的收藏夹, 若comicId为空, 则此字段为空
-                favorited: data.favorited
-            }
-            ```
-            */
-        },
-        /// 加载漫画
-        loadComics: async (page, folder) => {
-            /*
-            加载漫画
-            同上, 抛出错误`Login expired`表示登录到期, App将会自动重新登录并且重新加载
-            如果为非多收藏夹式, 参数folder为null
-            ```
-            let data = JSON.parse((await Network.get('...')).body)
-            let maxPage = data.maxPage
-
-            function parseComic(comic) {
-                // ...
-
-                return {
-                    id: id,
-                    title: title,
-                    subTitle: author,
-                    cover: cover,
-                    tags: tags,
-                    description: description
-                }
-            }
-
-            return {
-                comics: data.list.map(parseComic),
-                maxPage: maxPage
-            }
-            ```
-            */
-        }
-    }
+    favorites = null
 
     /// 单个漫画相关
     comic = {
         // 加载漫画信息
         loadInfo: async (id) => {
-            /*
-            ```
-            // ...
+            let json = await this.queryJson(
+                `comic/detail?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&comic_py=${id}`
+            )
+
+            let comicInfo = json.data.comicInfo
+            let authors = [comicInfo.authorInfo.authorName]
+            let types = comicInfo.types ? comicInfo.types : ""
+            types = types.split("/")
+            let chapterList = {}
+            if (comicInfo.chapterList) {
+                comicInfo.chapterList[0].data.forEach(element => {
+                    let id = element.chapter_id
+                    let title = element.chapter_title
+                    chapterList[id] = title
+                })
+            }
+            let groupComicList = []
+            comicInfo.groupComicList.forEach(element => {
+                groupComicList.push({
+                    id: element.comic_py,
+                    title: element.name,
+                    cover: element.cover,
+                })
+            })
 
             return {
-                // string 标题
-                title: title,
-                // string 封面url
-                cover: cover,
-                // string
-                description: description,
-                // Map<string, string[]> | object 标签
+                title: comicInfo.title,
+                cover: comicInfo.cover,
+                description: comicInfo.description,
                 tags: {
                     "作者": authors,
-                    "更新": [updateTime],
-                    "标签": tags
+                    "更新": [comicInfo.lastUpdateChapterName],
+                    "标签": types,
                 },
-                // Map<string, string>? | object, key为章节id, value为章节名称
-                // 注意: 为了保证章节顺序, 最好使用Map, 使用object不能保证顺序
-                chapters: chapters,
-                // bool 注意, 如果是多收藏式的网络收藏, 将此项设置为null, 从而可以在漫画详情页面, 对每个单独的收藏夹执行收藏或者取消收藏操作
-                isFavorite: isFavorite,
-                // string? 
-                subId: comicData.uuid,
-                // string[]?
-                thumbnails: thumbnails
+                chapters: chapterList,
+                recommend: groupComicList,
             }
-            ```
-            */
         },
         // 获取章节图片
         loadEp: async (comicId, epId) => {
@@ -320,85 +241,5 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
             ```
             */
         },
-        // 可选, 调整图片加载的行为; 如不需要, 删除此字段
-        onImageLoad: (url, comicId, epId) => {
-            /*
-            ```
-            return {
-                url: `${url}?id=comicId`,
-                // http method
-                method: 'GET',
-                // any
-                data: null,
-                headers: {
-                    'user-agent': 'pica_comic/v3.1.0',
-                },
-                // 参数data和返回值均为 `ArrayBuffer`
-                // 注意: 使用此字段会导致图片数据被多次复制, 可能影响性能
-                onResponse: (data) => {
-                    return data
-                }
-            }
-            ```
-            */
-
-            return {}
-        },
-        // [v3.1.4添加] 可选, 调整缩略图(封面, 预览, 头像等)加载的行为; 如不需要, 删除此字段
-        onThumbnailLoad: (url) => {
-            /*
-            ```
-            return {
-                url: `${url}?id=comicId`,
-                // http method
-                method: 'GET',
-                // any
-                data: null,
-                headers: {
-                    'user-agent': 'pica_comic/v3.1.0',
-                },
-                // 参数data和返回值均为 `ArrayBuffer`
-                // 注意: 使用此字段会导致图片数据被多次复制, 可能影响性能
-                onResponse: (data) => {
-                    return data
-                }
-            }
-            ```
-            */
-            return {}
-        },
-        // 加载评论
-        loadComments: async (comicId, subId, page, replyTo) => {
-            /*
-            ```
-            // ...
-
-            return {
-                comments: data.results.list.map(e => {
-                    return {
-                        // string
-                        userName: e.user_name,
-                        // string
-                        avatar: e.user_avatar,
-                        // string
-                        content: e.comment,
-                        // string?
-                        time: e.create_at,
-                        // number?
-                        replyCount: e.count,
-                        // string
-                        id: e.id,
-                    }
-                }),
-                // number
-                maxPage: data.results.maxPage,
-            }
-            ```
-            */
-        },
-        // 发送评论, 返回任意值表示成功
-        sendComment: async (comicId, subId, content, replyTo) => {
-
-        }
     }
 }
