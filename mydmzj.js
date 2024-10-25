@@ -42,7 +42,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
             types = types.split("/")
 
             return {
-                id: comic.comic_py,
+                id: comic.comic_py + "|" + comic.id,
                 title: comic.name,
                 subTitle: comic.authors,
                 cover: comic.cover,
@@ -191,8 +191,9 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
     comic = {
         // 加载漫画信息
         loadInfo: async (id) => {
+            let comic_py = id.split("|")[0]
             let json = await this.queryJson(
-                `comic/detail?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&comic_py=${id}`
+                `comic/detail?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&comic_py=${comic_py}`
             )
 
             let comicInfo = json.data.comicInfo
@@ -231,15 +232,14 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
         },
         // 获取章节图片
         loadEp: async (comicId, epId) => {
-            /*
-            获取此章节所有的图片url
-            ```
+            let comic_id = comicId.split("|")[1]
+            let json = await this.queryJson(
+                `chapter/detail?channel=pc&app_name=dmzj&version=1.0.0&timestamp=${this.timestamp}&uid&comic_id=${comic_id}&chapter_id=${epId}`
+            )
+
             return {
-                // string[]
-                images: images
+                images: json.data.chapterInfo.page_url
             }
-            ```
-            */
         },
     }
 }
