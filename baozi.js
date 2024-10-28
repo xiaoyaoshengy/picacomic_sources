@@ -3,7 +3,7 @@ class Baozi extends ComicSource {
     name = "包子漫画（修正）"  // 为了与官方源区别
 
     // 唯一标识符
-    key = "xiaoyaosheny/baozi"
+    key = "xiaoyaosheny_baozi"
 
     version = "1.0.0"
 

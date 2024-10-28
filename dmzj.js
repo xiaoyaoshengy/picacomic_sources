@@ -3,7 +3,7 @@ class DMZJ extends ComicSource {  // 首行必须为class...
     name = "动漫之家"
 
     // 唯一标识符
-    key = "xiaoyaosheny/dmzj"
+    key = "xiaoyaosheny_dmzj"
 
     version = "1.0.0"
 
