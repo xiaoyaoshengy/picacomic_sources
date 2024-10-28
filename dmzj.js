@@ -1,16 +1,16 @@
-class MyDMZJ extends ComicSource {  // 首行必须为class...
+class DMZJ extends ComicSource {  // 首行必须为class...
     // 此漫画源的名称
     name = "动漫之家"
 
     // 唯一标识符
-    key = "mydmzj"
+    key = "xiaoyaosheny/dmzj"
 
     version = "1.0.0"
 
     minAppVersion = "4.0.0"
 
     // 更新链接
-    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/mydmzj.js"
+    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/dmzj.js"
 
     get timestamp() {
         return new Date().getTime()
@@ -22,7 +22,7 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
         )
 
         if (res.status !== 200) {
-            throw `Invaid Status Code ${res.status}`
+            throw `Invalid Status Code ${res.status}`
         }
 
         let json = JSON.parse(res.body)
@@ -34,6 +34,14 @@ class MyDMZJ extends ComicSource {  // 首行必须为class...
         return json
     }
 
+    /**
+     * 用于获取漫画相关的信息
+     * @param {String} query 查询用的词条
+     * @param {String} totalName 用来获取数据的总数量的 key 名称
+     * @param {String} comicListName 用来获取漫画列表的 key 名称
+     * @param {int} pageSize 对应查询中表示每页数量的值
+     * @returns 请查看 template.js 的说明
+     */
     async queryComics(query, totalName, comicListName, pageSize) {
         let json = await this.queryJson(query)
 

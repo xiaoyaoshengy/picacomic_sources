@@ -1,16 +1,16 @@
-class MyBaozi extends ComicSource {
+class Baozi extends ComicSource {
     // 此漫画源的名称
     name = "包子漫画（修正）"  // 为了与官方源区别
 
     // 唯一标识符
-    key = "mybaozi"
+    key = "xiaoyaosheny/baozi"
 
     version = "1.0.0"
 
     minAppVersion = "4.0.0"
 
     // 更新链接
-    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/mybaozi.js"
+    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/baozi.js"
 
     /// APP启动时或者添加/更新漫画源时执行此函数
     init() {
