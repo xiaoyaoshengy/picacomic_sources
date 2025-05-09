@@ -250,7 +250,6 @@ class CopyManga_xiaoyaosheny extends ComicSource {
                     subTitle: author,
                     cover: comic["cover"],
                     tags: tags,
-                    description: comic["datetime_updated"]
                 }
             }
 
