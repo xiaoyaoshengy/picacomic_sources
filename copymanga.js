@@ -8,7 +8,7 @@ class CopyManga_xiaoyaosheny extends ComicSource {
 
     minAppVersion = "3.1.0"
 
-    url = "https://raw.githubusercontent.com/xiaoyaosheny/picacomic_sources/master/copymanga.js"
+    url = "https://raw.githubusercontent.com/xiaoyaoshengy/picacomic_sources/master/copymanga.js"
 
     headers = {}
 
