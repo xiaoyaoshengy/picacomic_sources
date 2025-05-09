@@ -221,7 +221,7 @@ class CopyManga_xiaoyaosheny extends ComicSource {
         load: async (keyword, options, page) => {
             keyword = encodeURIComponent(keyword)
             var res = await Network.get(
-                `https://api.${this.baseUrl}/api/v3/search/comic?limit=21&offset=${(page - 1) * 21}&q=${keyword}&q_type=&platform=3`,
+                `https://www.${this.baseUrl}/api/kb/web/searchbd/comics?limit=21&offset=${(page - 1) * 21}&q=${keyword}&q_type=&platform=3`,
                 this.headers
             )
             if (res.status !== 200) {
